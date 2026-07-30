@@ -1,14 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import prisma from './lib/prisma.js';
-
+import authRoutes from './routes/auth.routes.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/auth", authRoutes);
 
-app.get("/test-db", async (req, res) => {
+app.get("/test-health", async (req, res) => {
   try {
     await prisma.$connect();
 
