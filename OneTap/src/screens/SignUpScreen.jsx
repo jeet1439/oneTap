@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView, Alert } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 
 const avatars = [
@@ -18,20 +18,66 @@ const SignUpScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
 
   const [selectedAvatar, setSelectedAvatar] = useState(avatars[0]);
-  const [profileImage, setProfileImage] = useState(null);
 
 
+  const handleSignup = async () => {
+  try {
+    if (!username || !email || !password) {
+      Alert.alert(
+        "Missing Information",
+        "Please enter username, email and password."
+      );
+      return;
+    }
 
-  const handleSignup = () => {
-    console.log({
-      username,
-      email,
-      password,
-      image: profileImage,
-      avatar: selectedAvatar,
-    });
+    const image =  selectedAvatar;
 
-  };
+    const response = await fetch(
+      "http://192.168.0.101:5000/api/auth/signup",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          image,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("Signup Response:", data);
+
+    if (!response.ok) {
+      Alert.alert(
+        "Signup Failed",
+        data.message || "Something went wrong"
+      );
+      return;
+    }
+    if (data.success) {
+      console.log("JWT Token:", data.token);
+      console.log("User:", data.user);
+      Alert.alert(
+        "Success",
+        "Account created successfully!"
+      );
+      navigation.replace("Main");
+    }
+  } catch (error) {
+    console.log("Signup Error:", error);
+
+    Alert.alert(
+      "Error",
+      "Unable to connect to the server."
+    );
+  }
+};
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
@@ -42,7 +88,7 @@ const SignUpScreen = ({ navigation }) => {
 
         <Image
           source={{
-            uri: profileImage || selectedAvatar,
+            uri: selectedAvatar,
           }}
           style={styles.profileImage}
         />
@@ -58,12 +104,11 @@ const SignUpScreen = ({ navigation }) => {
               key={index}
               onPress={() => {
                 setSelectedAvatar(avatar);
-                setProfileImage(null);
               }}
             >
               <Image
                 source={{ uri: avatar }}
-                style={[ styles.avatar, selectedAvatar === avatar && !profileImage && styles.selectedAvatar ]}
+                style={[ styles.avatar, selectedAvatar === avatar  && styles.selectedAvatar ]}
               />
             </TouchableOpacity>
           ))}

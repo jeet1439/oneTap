@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { useTheme } from '../contexts/ThemeContext.js';
 
@@ -13,12 +13,72 @@ const LoginScreen = ({ navigation }) => {
 
   const [ email, setEmail ] = useState("");
   const [ password, setPassword ] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    console.log("Login Pressed");
-    navigation.navigate("Main");
+  
+  const handleLogin = async () => {
+    try {
+      if (!email || !password) {
+        Alert.alert(
+          "Missing Information",
+          "Please enter email and password."
+        );
+        return;
+      }
 
-  }
+      setLoading(true);
+
+      const response = await fetch(
+        "http://192.168.0.101:5000/api/auth/login",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            email: email.trim(),
+            password: password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log("Login Response:", data);
+      if (!response.ok) {
+        Alert.alert(
+          "Login Failed",
+          data.message || "Invalid email or password."
+        );
+        return;
+      }
+
+      if (data.success) {
+        const token = data.token;
+        const user = data.user;
+
+        console.log("JWT Token:", token);
+        console.log("Logged in User:", user);
+
+        Alert.alert(
+          "Success",
+          "Login successful!"
+        );
+
+        navigation.replace("Main");
+      }
+    } catch (error) {
+      console.log("Login Error:", error);
+
+      Alert.alert(
+        "Error",
+        "Unable to connect to the server."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <View style={styles.container}>
      <Image source={applogo} style={styles.logo}/>
