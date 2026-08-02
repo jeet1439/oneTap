@@ -1,20 +1,39 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Switch,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, } from "react-native";
 import Ionicons from "@react-native-vector-icons/ionicons";
 
 import ScreenLayout from "../components/ScreenLayout";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 
-const SettingsScreen = () => {
+const SettingsScreen = ({navigation}) => {
   const { colors, isDark, toggleTheme } = useTheme();
-  const styles = createStyles(colors);
+  const { logoutUser } = useAuth();
 
+  const styles = createStyles(colors);
+  
+  const handleLogout = () => {
+  Alert.alert( "Logout", "Are you sure you want to logout?",
+    [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          await logoutUser();
+
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Login" }],
+          });
+        },
+      },
+    ]
+  );
+};
   return (
     <ScreenLayout showNotification={false}>
       <Text style={styles.title}>Settings</Text>
@@ -100,7 +119,9 @@ const SettingsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton}>
+      <TouchableOpacity
+       style={styles.logoutButton}
+       onPress={handleLogout}>
         <Ionicons
           name="log-out-outline"
           size={20}

@@ -1,6 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView, Alert } from "react-native";
+
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView, Alert,
+} from "react-native";
+
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const avatars = [
   "https://res.cloudinary.com/dzwismxgx/image/upload/v1784828191/avatar4_l2qasx.png",
@@ -11,73 +15,73 @@ const avatars = [
 
 const SignUpScreen = ({ navigation }) => {
   const { colors } = useTheme();
+
+  const { loginUser } = useAuth();
+
   const styles = createStyles(colors);
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [selectedAvatar, setSelectedAvatar] = useState(avatars[0]);
-
+  const [loading, setLoading] = useState(false);
 
   const handleSignup = async () => {
-  try {
-    if (!username || !email || !password) {
-      Alert.alert(
-        "Missing Information",
-        "Please enter username, email and password."
-      );
-      return;
-    }
-
-    const image =  selectedAvatar;
-
-    const response = await fetch(
-      "http://192.168.0.101:5000/api/auth/signup",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          username,
-          email,
-          password,
-          image,
-        }),
+    try {
+      if (!username || !email || !password) {
+        Alert.alert("Missing Information","Please enter username, email and password.");
+        return;
       }
-    );
 
-    const data = await response.json();
+      setLoading(true);
 
-    console.log("Signup Response:", data);
+      const response = await fetch("http://192.168.0.101:5000/api/auth/signup",
+        {
+          method: "POST",
 
-    if (!response.ok) {
-      Alert.alert(
-        "Signup Failed",
-        data.message || "Something went wrong"
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            username: username.trim(),
+            email: email.trim(),
+            password: password,
+            image: selectedAvatar,
+          }),
+        }
       );
-      return;
-    }
-    if (data.success) {
-      console.log("JWT Token:", data.token);
-      console.log("User:", data.user);
-      Alert.alert(
-        "Success",
-        "Account created successfully!"
-      );
-      navigation.replace("Main");
-    }
-  } catch (error) {
-    console.log("Signup Error:", error);
 
-    Alert.alert(
-      "Error",
-      "Unable to connect to the server."
-    );
-  }
-};
+      const data = await response.json();
+
+      console.log("Signup Response:", data);
+
+      if (!response.ok) {
+        Alert.alert("Signup Failed", data.message || "Something went wrong");
+        return;
+      }
+
+      if (data.success) {
+        const token = data.token;
+        const user = data.user;
+
+        console.log("JWT Token:", token);
+        console.log("User:",user);
+
+        await loginUser(token,user);
+
+        Alert.alert("Success","Account created successfully!");
+
+        navigation.replace("Main");
+      }
+    } catch (error) {
+      console.log("Signup Error:", error);
+
+      Alert.alert("Error","Unable to connect to the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
@@ -85,7 +89,6 @@ const SignUpScreen = ({ navigation }) => {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-
         <Image
           source={{
             uri: selectedAvatar,
@@ -93,38 +96,43 @@ const SignUpScreen = ({ navigation }) => {
           style={styles.profileImage}
         />
 
-
-
-
-        {/* Avatars */}
-        <Text style={styles.avatarTitle}>Or Choose an Avatar</Text>
-        <View style={{ flexDirection: "row", marginBottom: 30 }}>
-          {avatars.map((avatar, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => {
-                setSelectedAvatar(avatar);
-              }}
-            >
-              <Image
-                source={{ uri: avatar }}
-                style={[ styles.avatar, selectedAvatar === avatar  && styles.selectedAvatar ]}
-              />
-            </TouchableOpacity>
-          ))}
+        <Text style={styles.avatarTitle}>
+          Choose an Avatar
+        </Text>
+        <View
+          style={{ flexDirection: "row", marginBottom: 30 }}
+        >
+          {avatars.map(
+            (avatar, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => { setSelectedAvatar(avatar);}}
+                >
+                <Image
+                  source={{ uri: avatar}}
+                  style={[ styles.avatar, selectedAvatar === avatar && styles.selectedAvatar]}
+                />
+              </TouchableOpacity>
+            )
+          )}
         </View>
 
         <TextInput
           placeholder="Username"
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={
+            colors.textSecondary
+          }
           value={username}
           onChangeText={setUsername}
+          autoCapitalize="none"
           style={styles.input}
         />
 
         <TextInput
           placeholder="Email"
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={
+            colors.textSecondary
+          }
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -134,7 +142,9 @@ const SignUpScreen = ({ navigation }) => {
 
         <TextInput
           placeholder="Password"
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={
+            colors.textSecondary
+          }
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -142,13 +152,26 @@ const SignUpScreen = ({ navigation }) => {
         />
 
         <TouchableOpacity
-          style={styles.signupButton}
+          style={[
+            styles.signupButton,
+            loading && {
+              opacity: 0.6,
+            },
+          ]}
           onPress={handleSignup}
+          disabled={loading}
         >
-          <Text style={styles.signupText}>Create Account</Text>
+          <Text style={styles.signupText}>
+            {loading ? "Creating Account..." : "Create Account"}
+          </Text>
         </TouchableOpacity>
-        <Text style={{ color: colors.textSecondary, marginTop: 20 }}>
-          Already have an account? <Text onPress={() => navigation.goBack()} style={{ color: colors.primary }}>Login</Text>
+
+        <Text style={{ color: colors.textSecondary, marginTop: 20}}>
+          Already have an account?{" "}
+          <Text onPress={() =>  navigation.goBack()}
+            style={{ color: colors.primary,}}>
+            Login
+          </Text>
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -174,12 +197,6 @@ const createStyles = (colors) =>
       borderWidth: 3,
       borderColor: colors.primary,
       marginBottom: 10,
-    },
-
-    uploadText: {
-      color: colors.primary,
-      fontWeight: "600",
-      marginBottom: 25,
     },
 
     avatarTitle: {
@@ -229,4 +246,4 @@ const createStyles = (colors) =>
       fontSize: 16,
       fontWeight: "600",
     },
-  })
+  });

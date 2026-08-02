@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, FlatList} from "react-native";
+import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity } from "react-native";
+import Ionicons from "@react-native-vector-icons/ionicons";
 import ScreenLayout from "../components/ScreenLayout";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -34,6 +35,14 @@ const ProfileScreen = () => {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
+  const totalFriends = 128;
+  const totalFriendRequests = 5;
+  const totalViews = 1.2;
+
+  const handleUploadImage = () => {
+    console.log("Upload image pressed");
+  };
+
   return (
     <ScreenLayout showNotification={false}>
       <View style={styles.profileHeader}>
@@ -50,17 +59,47 @@ const ProfileScreen = () => {
             Jeet Banik
           </Text>
           <Text style={styles.about}>
-            Passionate developer who loves building
-            mobile applications and connecting with
-            new people.
+            lorem ipsum dolor sit amet, consectetur adipiscing elit. 
           </Text>
         </View>
-
       </View>
 
-      <Text style={styles.sectionTitle}>
-        Uploaded Images
-      </Text>
+      {/* Stats Row */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>{totalFriends}</Text>
+          <Text style={styles.statLabel}>Friends</Text>
+        </View>
+
+        <View style={styles.statDivider} />
+
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>{totalFriendRequests}</Text>
+          <Text style={styles.statLabel}>Requests</Text>
+        </View>
+
+        <View style={styles.statDivider} />
+
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>{totalViews}k</Text>
+          <Text style={styles.statLabel}>Views</Text>
+        </View>
+      </View>
+
+      <View style={styles.sectionHeaderRow}>
+        <Text style={styles.sectionTitle}>
+          Uploaded Images
+        </Text>
+
+        <TouchableOpacity
+          style={styles.uploadBtn}
+          onPress={handleUploadImage}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="camera-outline" size={18} color={colors.background} />
+          <Text style={styles.uploadBtnText}>Upload</Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         data={uploadedImages}
@@ -75,7 +114,6 @@ const ProfileScreen = () => {
           />
         )}
       />
-
     </ScreenLayout>
   );
 };
@@ -90,8 +128,8 @@ const createStyles = (colors) =>
     },
 
     profileImage: {
-      width: 100,
-      height: 100,
+      width: 75,
+      height: 75,
       borderRadius: 50,
     },
 
@@ -112,12 +150,68 @@ const createStyles = (colors) =>
       marginTop: 8,
     },
 
+    statsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.card || colors.surface,
+      borderRadius: 14,
+      paddingVertical: 14,
+      marginTop: 0,
+    },
+
+    statItem: {
+      flex: 1,
+      alignItems: "center",
+    },
+
+    statDivider: {
+      width: 1,
+      height: 28,
+      backgroundColor: colors.border || colors.textSecondary,
+      opacity: 0.3,
+    },
+
+    statNumber: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: colors.text,
+    },
+
+    statLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+
+    sectionHeaderRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 30,
+      marginBottom: 15,
+    },
+
     sectionTitle: {
       fontSize: 18,
       fontWeight: "700",
       color: colors.text,
-      marginTop: 30,
-      marginBottom: 15,
+    },
+
+    uploadBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.primary || colors.text,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 20,
+      gap: 6,
+    },
+
+    uploadBtnText: {
+      color: colors.background,
+      fontSize: 13,
+      fontWeight: "600",
     },
 
     row: {
@@ -133,4 +227,4 @@ const createStyles = (colors) =>
 
   });
 
-export default ProfileScreen
+export default ProfileScreen;
