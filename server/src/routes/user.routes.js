@@ -1,5 +1,5 @@
 import express from "express";
-import { getMe, getUserById, updateProfile, updateBleId, addFeaturedPhoto, deleteFeaturedPhoto, searchUsers, getRecommendedUsers, deleteAccount,
+import { getMe, getUserById, updateProfile, updateBleId, addFeaturedPhoto, deleteFeaturedPhoto, searchUsers, getRecommendedUsers, deleteAccount, getProfileStats,
 } from "../controllers/user.controller.js";
 
 import { verifyToken } from "../middlewares/auth.middleware.js";
@@ -9,6 +9,7 @@ const router = express.Router();
 
 
 router.get("/me", verifyToken, getMe);
+router.get("/me/stats", verifyToken, getProfileStats);
 
 router.get("/:id", verifyToken, getUserById);
 

@@ -50,6 +50,48 @@ export const getMe = async (req, res) => {
   }
 };
 
+export const getProfileStats = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const [friendsCount, pendingRequestsCount] = await Promise.all([
+      // Count active friendships in either direction
+      prisma.friendship.count({
+        where: {
+          status: "ACTIVE",
+          OR: [
+            { user1Id: userId },
+            { user2Id: userId },
+          ],
+        },
+      }),
+
+      // Count pending requests sent TO this user
+      prisma.friendRequest.count({
+        where: {
+          receiverId: userId,
+          status: "PENDING",
+        },
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        friends: friendsCount,
+        friendRequests: pendingRequestsCount,
+      },
+    });
+
+  } catch (error) {
+    console.error("Error in getProfileStats:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 export const getUserById = async (req, res) => {
   try {
